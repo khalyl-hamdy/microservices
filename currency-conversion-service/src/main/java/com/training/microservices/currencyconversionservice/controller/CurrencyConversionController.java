@@ -14,6 +14,8 @@ import org.springframework.web.client.RestTemplate;
 import com.training.microservices.currencyconversionservice.bean.CurrencyConversion;
 import com.training.microservices.currencyconversionservice.proxy.CurrencyExchangeProxy;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 @RestController
 public class CurrencyConversionController {
 
@@ -44,6 +46,7 @@ public class CurrencyConversionController {
 	}
 	
 	@GetMapping("/currency-conversion-feign/from/{from}/to/{to}/quantity/{quantity}")
+	@CircuitBreaker(name = "default", fallbackMethod = "hardcodedResponse")
 	public CurrencyConversion calculateCurrencyConversionFeign(
 			@PathVariable String from,
 			@PathVariable String to,
@@ -58,6 +61,10 @@ public class CurrencyConversionController {
 				quantity.multiply(currencyConversion.getConversionMultiple()), 
 				currencyConversion.getEnvironment() + " " + "feign");
 		
+	}
+	
+	public CurrencyConversion hardcodedResponse(Exception ex) {
+		return new CurrencyConversion((long) 0, "from", "to", new BigDecimal(20), new BigDecimal(2), new BigDecimal(10), "not found");
 	}
 
 }
